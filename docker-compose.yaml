@@ -6,9 +6,8 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_USER: user
+      POSTGRES_USER: username
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: test_database
+      POSTGRES_DB: cuddly_dollop_dev
     volumes:
       - /tmp/docker/pg_database:/tmp/pg_database
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql

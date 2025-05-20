@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - Cuddly Dollop{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow-md p-8">
+    <h2 class="text-2xl font-bold mb-4 text-gray-800">Добро пожаловать в АРМ медицинского сотрудника</h2>
+
+    {% if current_user.is_authenticated %}
+        <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6">
+            <p>Привет, <strong>{{ current_user.first_name }} {{ current_user.last_name }}</strong>!</p>
+            <p>Позиция: {{ current_user.position }} ({{ current_user.department }})</p>
+        </div>
+    {% else %}
+        <a href="{{ url_for('auth.login') }}"
+           class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            Авторизоваться
+        </a>
+    {% endif %}
+</div>
+{% endblock %}
