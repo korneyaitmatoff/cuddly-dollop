@@ -22,10 +22,10 @@ def login():
             next_page = request.args.get('next')
             if next_page is None or not next_page.startswith('/'):
                 next_page = url_for('main.index')
-            flash('You have been logged in successfully!', 'success')
+            flash('Вы успешно авторизованы!', 'success')
             return redirect(next_page)
         else:
-            flash('Invalid username or password', 'error')
+            flash('Неверный логин или пароль', 'error')
 
     return render_template('auth/login.html')
 

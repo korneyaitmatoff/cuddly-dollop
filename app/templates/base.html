@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Cuddly Dollop{% endblock %}</title>
+    <title>{% block title %}АРМ{% endblock %}</title>
     <!-- Tailwind CSS via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
@@ -11,14 +11,14 @@
 <body class="bg-gray-100 min-h-screen flex flex-col">
     <header class="bg-blue-600 text-white shadow-md">
         <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-            <h1 class="text-2xl font-bold">Cuddly Dollop</h1>
+            <h1 class="text-2xl font-bold">АРМ</h1>
             <nav>
                 <ul class="flex space-x-4">
-                    <li><a href="{{ url_for('main.index') }}" class="hover:underline">Home</a></li>
+                    <li><a href="{{ url_for('main.index') }}" class="hover:underline">Главная</a></li>
                     {% if current_user.is_authenticated %}
-                        <li><a href="{{ url_for('auth.logout') }}" class="hover:underline">Logout</a></li>
+                        <li><a href="{{ url_for('auth.logout') }}" class="hover:underline">Выход</a></li>
                     {% else %}
-                        <li><a href="{{ url_for('auth.login') }}" class="hover:underline">Login</a></li>
+                        <li><a href="{{ url_for('auth.login') }}" class="hover:underline">Авторизация</a></li>
                     {% endif %}
                 </ul>
             </nav>
@@ -41,7 +41,7 @@
 
     <footer class="bg-gray-800 text-white py-4">
         <div class="container mx-auto px-4 text-center">
-            <p>&copy; 2023 Cuddly Dollop</p>
+            <p>&copy; 2023 АРМ</p>
         </div>
     </footer>
 
