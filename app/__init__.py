@@ -21,7 +21,9 @@ def create_app(config_name='default'):
 
     # Register blueprints
     from app.views.main import main as main_blueprint
+    from app.views.medical_records import medical_records_bp
     app.register_blueprint(main_blueprint)
+    app.register_blueprint(medical_records_bp)
 
     from app.views.auth import auth as auth_blueprint
     app.register_blueprint(auth_blueprint, url_prefix='/auth')
