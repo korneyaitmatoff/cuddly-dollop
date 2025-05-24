@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}{{ report_title }}{% endblock %}
+
+{% block header %}{{ report_title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-semibold text-gray-800">{{ report_title }}</h2>
+            <div class="text-sm text-gray-600">
+                Период: {{ period_display }}
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <p class="text-gray-700">{{ report_description }}</p>
+        </div>
+
+        {% if chart_data %}
+        <div class="mb-6">
+            <canvas id="reportChart" width="400" height="200"></canvas>
+        </div>
+        {% endif %}
+
+        {% if report_data %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        {% for header in report_headers %}
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {{ header }}
+                        </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for row in report_data %}
+                    <tr class="hover:bg-gray-50">
+                        {% for cell in row %}
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                            {{ cell }}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 text-yellow-700">
+            Нет данных для отображения за выбранный период.
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="flex justify-between">
+        <a href="{{ url_for('reports.generate') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-6 rounded-md transition duration-200">
+            Назад к форме
+        </a>
+        <button onclick="window.print()" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-6 rounded-md transition duration-200">
+            Распечатать отчет
+        </button>
+    </div>
+</div>
+
+{% if chart_data %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('reportChart').getContext('2d');
+        const chartData = {{ chart_data|tojson }};
+
+        new Chart(ctx, {
+            type: chartData.type,
+            data: {
+                labels: chartData.labels,
+                datasets: [{
+                    label: chartData.label,
+                    data: chartData.data,
+                    backgroundColor: chartData.backgroundColor || [
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                        'rgba(255, 159, 64, 0.2)'
+                    ],
+                    borderColor: chartData.borderColor || [
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endif %}
+{% endblock %}

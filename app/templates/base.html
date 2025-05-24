@@ -23,6 +23,7 @@
                     </a>
                 </li>
                 <li><a href="{{ url_for('certificates.generate') }}" class="hover:underline">Справки</a></li>
+                <li><a href="{{ url_for('reports.generate') }}" class="hover:underline">Отчеты</a></li>
                 <li><a href="{{ url_for('auth.logout') }}" class="hover:underline">Выход</a></li>
                 {% else %}
                 <li><a href="{{ url_for('auth.login') }}" class="hover:underline">Авторизация</a></li>
