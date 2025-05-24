@@ -26,6 +26,7 @@ def create_app(config_name='default'):
     from app.models.employee import Employee
     from app.views.certificates import certificates
     from app.views.reports import reports as reports_bp
+    from app.views.sanitary_inspections import sanitary_inspections_bp
 
     # Register blueprints
     app.register_blueprint(auth_blueprint, url_prefix='/auth')
@@ -33,6 +34,7 @@ def create_app(config_name='default'):
     app.register_blueprint(main_blueprint)
     app.register_blueprint(medical_records)
     app.register_blueprint(reports_bp)
+    app.register_blueprint(sanitary_inspections_bp)
 
     @login_manager.user_loader
     def load_user(user_id):

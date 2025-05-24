@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+
+{% block title %}Sanitary Inspections{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <div class="flex flex-col lg:flex-row gap-6">
+        <!-- Sidebar for listing inspections -->
+        <div class="lg:w-1/3">
+            <div class="bg-white rounded-lg shadow-md">
+                <div class="max-h-96 overflow-y-auto">
+                    {% for inspection in inspections %}
+                    <a href="{{ url_for('sanitary_inspections.sanitary_inspections', inspection_id=inspection.id) }}"
+                       class="inspection-item block border-b border-gray-100 p-4 cursor-pointer hover:bg-gray-50 transition-colors duration-200 text-decoration-none
+                              {% if selected_inspection and selected_inspection.id == inspection.id %}bg-blue-600 text-white{% endif %}"
+                       data-inspection-id="{{ inspection.id }}">
+                        <div class="flex justify-between items-start mb-2">
+                            <h6 class="font-medium text-sm {% if selected_inspection and selected_inspection.id == inspection.id %}text-white{% else %}text-gray-900{% endif %}">
+                                {{ inspection.facility_name }}
+                            </h6>
+                            <span class="text-xs {% if selected_inspection and selected_inspection.id == inspection.id %}text-blue-100{% else %}text-gray-500{% endif %}">
+                                {{ inspection.inspection_date.strftime('%m/%d/%Y') }}
+                            </span>
+                        </div>
+                        <p class="text-sm mb-2 truncate {% if selected_inspection and selected_inspection.id == inspection.id %}text-blue-100{% else %}text-gray-600{% endif %}">
+                            {{ inspection.facility_address }}
+                        </p>
+                        <div class="flex justify-between items-center">
+                            <span class="px-2 py-1 text-xs font-medium rounded-full
+                                {% if selected_inspection and selected_inspection.id == inspection.id %}bg-white text-blue-600
+                                {% elif inspection.overall_rating == 'excellent' %}bg-green-100 text-green-800
+                                {% elif inspection.overall_rating == 'good' %}bg-yellow-100 text-yellow-800
+                                {% elif inspection.overall_rating == 'fair' %}bg-blue-100 text-blue-800
+                                {% else %}bg-red-100 text-red-800{% endif %}">
+                                {{ inspection.overall_rating.title() }}
+                            </span>
+                            <div class="flex items-center text-xs {% if selected_inspection and selected_inspection.id == inspection.id %}text-blue-100{% else %}text-gray-500{% endif %}">
+                                <i class="fas fa-{% if inspection.inspection_type == 'routine' %}calendar-check{% elif inspection.inspection_type == 'complaint' %}exclamation-circle{% elif inspection.inspection_type == 'follow-up' %}redo{% else %}plus-circle{% endif %} mr-1"></i>
+                                {{ inspection.inspection_type.title() }}
+                            </div>
+                        </div>
+                        {% if inspection.warnings %}
+                        <div class="mt-2">
+                            <span class="text-xs flex items-center {% if selected_inspection and selected_inspection.id == inspection.id %}text-yellow-200{% else %}text-orange-600{% endif %}">
+                                <i class="fas fa-exclamation-triangle mr-1"></i>
+                                {{ inspection.warnings|length }} warning(s)
+                            </span>
+                        </div>
+                        {% endif %}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Content area for inspection details -->
+        <div class="lg:w-2/3">
+            <div id="inspection-content" class="bg-white rounded-lg shadow-md">
+                {% if selected_inspection %}
+                <!-- Inspection Header -->
+                <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 rounded-t-lg">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h5 class="text-xl font-semibold mb-1 flex items-center">
+                                <i class="fas fa-building mr-2"></i>{{ selected_inspection.facility_name }}
+                            </h5>
+                            <p class="text-blue-100 flex items-center">
+                                <i class="fas fa-map-marker-alt mr-2"></i>{{ selected_inspection.facility_address }}
+                            </p>
+                        </div>
+                        <span class="px-3 py-1 rounded-full text-sm font-medium
+                                {% if selected_inspection.overall_rating == 'Отлично' %}bg-green-100 text-green-800
+                                {% elif selected_inspection.overall_rating == 'Хорошо' %}bg-yellow-100 text-yellow-800
+                                {% elif selected_inspection.overall_rating == 'Удовлетворительно' %}bg-blue-100 text-blue-800
+                                {% else %}bg-red-100 text-red-800{% endif %}">
+                                {{ selected_inspection.overall_rating.upper() }}
+                            </span>
+                    </div>
+                </div>
+
+                <div class="p-6">
+                    <!-- Inspection Overview -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div class="bg-white border border-gray-200 rounded-lg p-4 text-center shadow-sm">
+                            <i class="fas fa-calendar-alt text-2xl text-blue-600 mb-2"></i>
+                            <h6 class="font-medium text-gray-800">Inspection Date</h6>
+                            <p class="text-gray-600">{{ selected_inspection.inspection_date.strftime('%m/%d/%Y') }}</p>
+                        </div>
+                        <div class="bg-white border border-gray-200 rounded-lg p-4 text-center shadow-sm">
+                            <i class="fas fa-user-tie text-2xl text-green-600 mb-2"></i>
+                            <h6 class="font-medium text-gray-800">Inspector</h6>
+                            <p class="text-gray-600">{{ selected_inspection.inspector_name }}</p>
+                        </div>
+                        <div class="bg-white border border-gray-200 rounded-lg p-4 text-center shadow-sm">
+                            <i class="fas fa-clipboard-list text-2xl text-purple-600 mb-2"></i>
+                            <h6 class="font-medium text-gray-800">Type</h6>
+                            <p class="text-gray-600">{{ selected_inspection.inspection_type.title() }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Add Forms Section -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <!-- Add Warning Form -->
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                            <h6 class="text-lg font-medium text-red-800 mb-3 flex items-center">
+                                <i class="fas fa-exclamation-triangle mr-2"></i>
+                                Добавить нарушение
+                            </h6>
+                            <form method="POST"
+                                  action="{{ url_for('sanitary_inspections.add_warning', inspection_id=selected_inspection.id) }}">
+                                <div class="mb-3">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Категория</label>
+                                    <select name="category"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                                            required>
+                                        <option value="">Выберите категорию</option>
+                                        <option value="безопасность_пищи">Безопасность пищи</option>
+                                        <option value="чистота">Чистота</option>
+                                        <option value="оборудование">Оборудование</option>
+                                        <option value="борьба_с_вредителями">Борьба с вредителями</option>
+                                        <option value="гигиена_сотрудников">Гигиена сотрудников</option>
+                                        <option value="контроль_температуры">Контроль температуры</option>
+                                        <option value="хранение">Хранение</option>
+                                        <option value="документооборот">Документооборот</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Серьезность</label>
+                                    <select name="severity"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                                            required>
+                                        <option value="">Выберите серьезность</option>
+                                        <option value="критическое">Критическое</option>
+                                        <option value="значительное">Значительное</option>
+                                        <option value="незначительное">Незначительное</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Описание</label>
+                                    <textarea name="description" rows="3"
+                                              class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                                              placeholder="Опишите нарушение..." required></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Корректирующие
+                                        действия</label>
+                                    <textarea name="corrective_action" rows="2"
+                                              class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                                              placeholder="Что нужно исправить..."></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Срок устранения</label>
+                                    <input type="date" name="deadline"
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
+                                </div>
+                                <button type="submit"
+                                        class="w-full bg-red-600 text-white py-2 px-4 rounded-md text-sm font-medium hover:bg-red-700 transition-colors">
+                                    <i class="fas fa-plus mr-1"></i>Добавить нарушение
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Add Note Form -->
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <h6 class="text-lg font-medium text-blue-800 mb-3 flex items-center">
+                                <i class="fas fa-sticky-note mr-2"></i>
+                                Добавить заметку
+                            </h6>
+                            <form method="POST"
+                                  action="{{ url_for('sanitary_inspections.add_note', inspection_id=selected_inspection.id) }}">
+                                <div class="mb-3">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Тип заметки</label>
+                                    <select name="note_type"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            required>
+                                        <option value="">Выберите тип</option>
+                                        <option value="наблюдение">Наблюдение</option>
+                                        <option value="рекомендация">Рекомендация</option>
+                                        <option value="похвала">Похвала</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Содержание</label>
+                                    <textarea name="content" rows="4"
+                                              class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                              placeholder="Введите текст заметки..." required></textarea>
+                                </div>
+                                <button type="submit"
+                                        class="w-full bg-blue-600 text-white py-2 px-4 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors">
+                                    <i class="fas fa-plus mr-1"></i>Добавить заметку
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+
+                    <!-- Warnings Section -->
+                    <div class="mb-6">
+                        <h6 class="text-lg font-medium text-gray-800 border-b border-gray-200 pb-2 mb-4 flex items-center">
+                            <i class="fas fa-exclamation-triangle text-yellow-500 mr-2"></i>
+                            Warnings ({{ selected_inspection.warnings|length }})
+                        </h6>
+                        {% if selected_inspection.warnings %}
+                        {% for warning in selected_inspection.warnings %}
+                        <div class="border-l-4 p-4 mb-4 rounded-r-lg
+                                    {% if warning.severity == 'Критично' %}border-red-500 bg-red-50
+                                    {% elif warning.severity == 'Высокий приоритет' %}border-yellow-500 bg-yellow-50
+                                    {% else %}border-green-500 bg-green-50{% endif %}">
+                            <div class="flex justify-between items-start mb-2">
+                                <div class="flex gap-2">
+                                            <span class="px-2 py-1 text-xs font-medium bg-gray-800 text-white rounded">
+                                                {{ warning.severity.upper() }}
+                                            </span>
+                                    <span class="px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded">
+                                                {{ warning.category.replace('_', ' ').upper() }}
+                                            </span>
+                                </div>
+                                {% if warning.is_resolved %}
+                                <span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">Resolved</span>
+                                {% else %}
+                                <span class="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">Pending</span>
+                                {% endif %}
+                            </div>
+                            <p class="text-gray-700 mb-2">{{ warning.description }}</p>
+                            {% if warning.corrective_action %}
+                            <div class="bg-blue-50 border border-blue-200 rounded p-3 mb-2">
+                                <p class="text-sm text-blue-800">
+                                    <strong><i class="fas fa-tools mr-1"></i>Исправить:</strong>
+                                    {{ warning.corrective_action }}
+                                </p>
+                            </div>
+                            {% endif %}
+                            {% if warning.deadline %}
+                            <p class="text-sm text-gray-500">
+                                <i class="fas fa-clock mr-1"></i>Сроки: {{ warning.deadline.strftime('%m/%d/%Y') }}
+                            </p>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="bg-green-50 border border-green-200 rounded p-4 text-green-800">
+                            <i class="fas fa-check-circle mr-2"></i>Замечаний нет
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Notes Section -->
+                    <div class="mb-6">
+                        <h6 class="text-lg font-medium text-gray-800 border-b border-gray-200 pb-2 mb-4 flex items-center">
+                            <i class="fas fa-sticky-note text-blue-500 mr-2"></i>
+                            Notes ({{ selected_inspection.notes|length }})
+                        </h6>
+                        {% if selected_inspection.notes %}
+                        {% for note in selected_inspection.notes %}
+                        <div class="border-l-4 border-blue-500 bg-gray-50 p-4 mb-4 rounded-r-lg">
+                            <h6 class="font-medium mb-2">
+                                        <span class="px-2 py-1 text-xs rounded-full
+                                            {% if note.note_type == 'Наблюдения' %}bg-blue-100 text-blue-800
+                                            {% elif note.note_type == 'Рекомендации' %}bg-yellow-100 text-yellow-800
+                                            {% elif note.note_type == 'Назначения' %}bg-green-100 text-green-800
+                                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                            <i class="fas fa-sticky-note mr-1"></i>{{ note.note_type.upper() }}
+                                        </span>
+                            </h6>
+                            <p class="text-gray-700 mb-2">{{ note.content }}</p>
+                            <p class="text-sm text-gray-500">
+                                <i class="fas fa-clock mr-1"></i>{{ note.created_at.strftime('%m/%d/%Y') }}
+                            </p>
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="bg-blue-50 border border-blue-200 rounded p-4 text-blue-800">
+                            <i class="fas fa-info-circle mr-2"></i>Нет заметок
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <div class="p-8 text-center text-gray-500">
+                    <i class="fas fa-clipboard-check text-6xl mb-4 text-gray-300"></i>
+                    <h5 class="text-xl font-medium mb-2">Выберите проверки для просмотра информации</h5>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('search-inspections');
+        const inspectionItems = document.querySelectorAll('.inspection-item');
+
+        // Search functionality
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+
+            inspectionItems.forEach(item => {
+                const facilityName = item.querySelector('h6').textContent.toLowerCase();
+                const address = item.querySelector('p').textContent.toLowerCase();
+
+                if (facilityName.includes(searchTerm) || address.includes(searchTerm)) {
+                    item.classList.remove('hidden');
+                } else {
+                    item.classList.add('hidden');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

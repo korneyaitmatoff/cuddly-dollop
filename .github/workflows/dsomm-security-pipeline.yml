@@ -1,0 +1,102 @@
+name: DSOMM Security Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # 1. SAST (Static Application Security Testing)
+  sast:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Semgrep (SAST)
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: p/security-audit  # OWASP-ориентированные правила
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-github-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+  # 2. SCA (Software Composition Analysis) + SBOM
+  dependency-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Generate SBOM with Syft
+        uses: anchore/sbom-action@v0
+        with:
+          format: 'spdx-json'
+          output-file: 'sbom.spdx.json'
+
+      - name: Scan dependencies with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          ignore-unfixed: true
+          format: 'table'
+          exit-code: '1'  # Fail on critical vulnerabilities
+          severity: 'CRITICAL,HIGH'
+
+  # 3. Secrets Detection
+  secrets-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Scan for secrets with Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          config-path: .gitleaks.toml  # Конфиг для исключений
+
+  # 4. DAST (Dynamic Application Security Testing)
+  dast:
+    needs: [sast, dependency-scan, secrets-check]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: OWASP ZAP Scan
+        uses: zaproxy/action-full-scan@v0.6.0
+        with:
+          target: 'http://your-web-app.com'  # Замените на URL вашего приложения
+          rules: 'rules/OWASP-top-10'  # Фокус на OWASP Top 10
+
+  # 5. Container Security (если используется Docker)
+  container-scan:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'  # Только при пушах в main
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t your-app-image .
+
+      - name: Scan container with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'your-app-image'
+          format: 'table'
+          exit-code: '1'
+          severity: 'CRITICAL,HIGH'
+
+  # 6. Deploy (только если все проверки пройдены)
+  deploy:
+    needs: [sast, dependency-scan, secrets-check, dast, container-scan]
+    if: success()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to Production
+        run: echo "Deploying securely to production..."

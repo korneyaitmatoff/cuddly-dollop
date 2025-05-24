@@ -4,7 +4,11 @@ from app.models.employee import Employee
 from app.models.student import Student
 from app.models.medical_card import MedicalRecord
 from datetime import datetime, timedelta
+from app.models.sanitary_inspection import SanitaryInspection, InspectionWarning, InspectionNote
 import random
+from faker import Faker
+
+fake = Faker()
 
 app = create_app('development')
 
@@ -208,3 +212,73 @@ with app.app_context():
         print("Database initialized with sample employees.")
     else:
         print("Database already contains employees.")
+
+
+    # init sanitary inspections
+
+    inspection_types = ['плановая', 'по_жалобе', 'повторная', 'предварительная']
+    ratings = ['отлично', 'хорошо', 'удовлетворительно', 'неудовлетворительно']
+    warning_categories = [
+        'безопасность_пищи', 'чистота', 'оборудование', 'борьба_с_вредителями',
+        'гигиена_сотрудников', 'контроль_температуры', 'хранение', 'документооборот'
+    ]
+    severities = ['критическое', 'значительное', 'незначительное']
+    note_types = ['наблюдение', 'рекомендация', 'похвала']
+
+    facility_types = [
+        'Ресторан', 'Кафе', 'Фуд-трак', 'Продуктовый магазин', 'Пекарня',
+        'Кейтеринг', 'Школьная столовая', 'Больничная кухня', 'Ресторан отеля'
+    ]
+    inspections = []
+    num_inspections = 50
+
+    for _ in range(num_inspections):
+        # Create inspection
+        inspection_date = fake.date_time_between(start_date='-2y', end_date='now')
+        facility_type = random.choice(facility_types)
+
+        inspection = SanitaryInspection(
+            inspection_date=inspection_date,
+            inspector_name=fake.name(),
+            facility_name=f"{fake.company()} {facility_type}",
+            facility_address=fake.address(),
+            inspection_type=random.choice(inspection_types),
+            overall_rating=random.choice(ratings),
+            created_at=inspection_date,
+            updated_at=inspection_date
+        )
+
+        db.session.add(inspection)
+        db.session.flush()  # Get the ID
+
+        # Generate warnings (0-5 per inspection)
+        num_warnings = random.randint(0, 5)
+        for _ in range(num_warnings):
+            warning = InspectionWarning(
+                inspection_id=inspection.id,
+                category=random.choice(warning_categories),
+                severity=random.choice(severities),
+                description=fake.paragraph(nb_sentences=2),
+                corrective_action=fake.paragraph(nb_sentences=1) if random.choice([True, False]) else None,
+                deadline=inspection_date + timedelta(days=random.randint(7, 30)) if random.choice(
+                    [True, False]) else None,
+                is_resolved=random.choice([True, False]),
+                created_at=inspection_date
+            )
+            db.session.add(warning)
+
+        # Generate notes (1-3 per inspection)
+        num_notes = random.randint(1, 3)
+        for _ in range(num_notes):
+            note = InspectionNote(
+                inspection_id=inspection.id,
+                note_type=random.choice(note_types),
+                content=fake.paragraph(nb_sentences=random.randint(1, 3)),
+                created_at=inspection_date
+            )
+            db.session.add(note)
+
+        inspections.append(inspection)
+
+    db.session.commit()
+    print(f"Generated {num_inspections} sanitary inspections with warnings and notes")
