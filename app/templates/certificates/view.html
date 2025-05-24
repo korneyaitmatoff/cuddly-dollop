@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Медицинская справка{% endblock %}
+
+{% block header %}Медицинская справка{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-8 border border-gray-200">
+    <div class="text-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">МЕДИЦИНСКАЯ СПРАВКА</h2>
+        <p class="text-gray-600">{{ certificate_type_name }}</p>
+    </div>
+
+    <div class="border-t border-b border-gray-200 py-4 mb-6">
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <p class="text-sm text-gray-600">Номер справки:</p>
+                <p class="font-medium">{{ certificate_number }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-600">Дата выдачи:</p>
+                <p class="font-medium">{{ issue_date }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-6">
+        <p class="text-sm text-gray-600">Данная справка выдана:</p>
+        <p class="font-medium text-lg">{{ student.last_name }} {{ student.first_name }}</p>
+        <p class="text-gray-700">Дата рождения: {{ student.date_of_birth.strftime('%d.%m.%Y') }}</p>
+    </div>
+
+    <div class="mb-6">
+        <p class="text-sm text-gray-600">Заключение:</p>
+        <p class="font-medium">{{ conclusion }}</p>
+    </div>
+
+    <div class="mb-6">
+        <p class="text-sm text-gray-600">Рекомендации:</p>
+        <p>{{ recommendations }}</p>
+    </div>
+
+    <div class="flex justify-between items-end mt-10">
+        <div>
+            <p class="text-sm text-gray-600">Врач:</p>
+            <p class="font-medium">{{ doctor }}</p>
+        </div>
+        <div>
+            <p class="text-sm text-gray-600">М.П.</p>
+        </div>
+    </div>
+
+    <div class="mt-8 flex justify-center">
+        <button onclick="window.print()" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-6 rounded-md transition duration-200">
+            Распечатать справку
+        </button>
+    </div>
+</div>
+{% endblock %}

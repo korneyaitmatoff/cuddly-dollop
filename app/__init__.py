@@ -31,6 +31,11 @@ def create_app(config_name='default'):
     # Set up user loader for Flask-Login
     from app.models.employee import Employee
 
+    from app.views.certificates import certificates
+
+    # Register blueprints
+    app.register_blueprint(certificates)
+
     @login_manager.user_loader
     def load_user(user_id):
         return Employee.query.get(int(user_id))
