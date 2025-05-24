@@ -1,17 +1,190 @@
-from lib2to3.pgen2.tokenize import group
-
 from app import create_app
 from app.models import db
 from app.models.employee import Employee
 from app.models.student import Student
-from app.models.medical_card import MedicalRecord  # Assuming this model exists
-from datetime import datetime
+from app.models.medical_card import MedicalRecord
+from datetime import datetime, timedelta
+import random
 
 app = create_app('development')
 
 with app.app_context():
     # Create all tables
     db.create_all()
+
+    # Create sample students
+    student1 = Student(
+        first_name='John',
+        last_name='Doe',
+        date_of_birth=datetime(2000, 1, 15),
+        group="IO-123"
+    )
+
+    student2 = Student(
+        first_name='Jane',
+        last_name='Smith',
+        date_of_birth=datetime(2001, 5, 20),
+        group="IO-234"
+    )
+
+    student3 = Student(
+        first_name='Michael',
+        last_name='Johnson',
+        date_of_birth=datetime(1999, 8, 10),
+        group="IO-123"
+    )
+
+    student4 = Student(
+        first_name='Emily',
+        last_name='Williams',
+        date_of_birth=datetime(2002, 3, 25),
+        group="IO-345"
+    )
+
+    student5 = Student(
+        first_name='David',
+        last_name='Brown',
+        date_of_birth=datetime(2001, 11, 7),
+        group="IO-234"
+    )
+
+    # Add students to session
+    db.session.add_all([student1, student2, student3, student4, student5])
+    db.session.commit()
+
+    # Create medical records for students with different dates
+
+    # List of record types
+    record_types = ["Простуда", "Травма", "Аллергия", "Профосмотр", "Вакцинация",
+                    "Головная боль", "Консультация", "Грипп", "Ангина", "Бронхит"]
+
+    # List of doctors
+    doctors = ["Dr. Johnson", "Dr. Smith", "Dr. Williams", "Dr. Brown", "Dr. Davis",
+               "Dr. Miller", "Dr. Wilson", "Dr. Moore", "Dr. Taylor", "Dr. Anderson"]
+
+    # List of descriptions
+    descriptions = [
+        "Сезонная простуда. Назначены противовирусные препараты.",
+        "Ушиб правого колена. Рекомендован покой.",
+        "Аллергическая реакция на пыльцу. Назначены антигистаминные.",
+        "Ежегодный профилактический осмотр. Патологий не выявлено.",
+        "Плановая вакцинация от гриппа.",
+        "Жалобы на головную боль. Рекомендован режим и анальгетики.",
+        "Консультация по поводу профилактики сезонных заболеваний.",
+        "Грипп. Назначено противовирусное лечение и постельный режим.",
+        "Бактериальная ангина. Назначен курс антибиотиков.",
+        "Острый бронхит. Назначены антибиотики и отхаркивающие средства.",
+        "Растяжение связок левого голеностопа. Наложена фиксирующая повязка.",
+        "Перелом указательного пальца правой руки. Наложена гипсовая лонгета.",
+        "Контрольный осмотр после перелома. Заживление идет нормально.",
+        "Снятие гипсовой лонгеты. Рекомендованы упражнения для разработки.",
+        "Мигрень. Назначены анальгетики и консультация невролога."
+    ]
+
+    # Generate medical records
+    medical_records = []
+
+    # Current date for reference
+    current_date = datetime.now()
+
+    # For each student, create multiple records with different dates
+    for student in [student1, student2, student3, student4, student5]:
+        # Generate 3-7 records per student
+        num_records = random.randint(3, 7)
+
+        for i in range(num_records):
+            # Generate a random date within the last year
+            days_ago = random.randint(1, 365)
+            record_date = current_date - timedelta(days=days_ago)
+
+            # Select random record type, doctor, and description
+            record_type = random.choice(record_types)
+            doctor = random.choice(doctors)
+            description = random.choice(descriptions)
+
+            # Create the medical record
+            med_record = MedicalRecord(
+                student_id=student.id,
+                date=record_date,
+                record_type=record_type,
+                description=description,
+                doctor=doctor
+            )
+
+            medical_records.append(med_record)
+
+    # Add some specific records for reporting purposes
+
+    # Add multiple records of the same type for trend analysis
+    for i in range(5):
+        days_ago = random.randint(1, 30)  # Last month
+        record_date = current_date - timedelta(days=days_ago)
+
+        flu_record = MedicalRecord(
+            student_id=random.choice([student1.id, student2.id, student3.id, student4.id, student5.id]),
+            date=record_date,
+            record_type="Грипп",
+            description="Сезонный грипп. Назначено лечение.",
+            doctor=random.choice(doctors)
+        )
+
+        medical_records.append(flu_record)
+
+    # Add records for the same student on consecutive days (for follow-up visits)
+    for i in range(3):
+        follow_up_date = current_date - timedelta(days=i * 2 + 5)
+
+        follow_up_record = MedicalRecord(
+            student_id=student3.id,
+            date=follow_up_date,
+            record_type="Контроль",
+            description=f"Контрольный осмотр #{i + 1}. Наблюдается положительная динамика.",
+            doctor="Dr. Johnson"
+        )
+
+        medical_records.append(follow_up_record)
+
+    # Add records for the same day (to test daily statistics)
+    same_day = current_date - timedelta(days=10)
+    for i in range(4):
+        same_day_record = MedicalRecord(
+            student_id=random.choice([student1.id, student2.id, student4.id, student5.id]),
+            date=same_day,
+            record_type=random.choice(record_types),
+            description=random.choice(descriptions),
+            doctor=random.choice(doctors)
+        )
+
+        medical_records.append(same_day_record)
+
+    # Add some injury records for injury report testing
+    for i in range(6):
+        days_ago = random.randint(1, 180)  # Last 6 months
+        injury_date = current_date - timedelta(days=days_ago)
+
+        injury_record = MedicalRecord(
+            student_id=random.choice([student1.id, student2.id, student3.id, student4.id, student5.id]),
+            date=injury_date,
+            record_type="Травма",
+            description=random.choice([
+                "Ушиб мягких тканей левого предплечья.",
+                "Растяжение связок правого голеностопа.",
+                "Ушиб правого колена при падении.",
+                "Травма пальца левой руки.",
+                "Спортивная травма плеча.",
+                "Ушиб мягких тканей спины."
+            ]),
+            doctor=random.choice(doctors)
+        )
+
+        medical_records.append(injury_record)
+
+    # Add all medical records to session
+    db.session.add_all(medical_records)
+    db.session.commit()
+
+    print(
+        f"Database initialized with {len([student1, student2, student3, student4, student5])} sample students and {len(medical_records)} medical records.")
 
     # Check if there are already employees
     if Employee.query.count() == 0:
@@ -35,58 +208,3 @@ with app.app_context():
         print("Database initialized with sample employees.")
     else:
         print("Database already contains employees.")
-
-    # Add student and his medical records
-    if Student.query.count() == 0:
-        # Create sample students
-        student1 = Student(
-            first_name='John',
-            last_name='Doe',
-            date_of_birth=datetime(2000, 1, 15),
-            group="IO-123"
-        )
-
-        student2 = Student(
-            first_name='Jane',
-            last_name='Smith',
-            date_of_birth=datetime(2001, 5, 20),
-            group="IO-234"
-        )
-
-        # Add students to session
-        db.session.add_all([student1, student2])
-        db.session.commit()
-
-        # Create medical records for students
-        med_record1 = MedicalRecord(
-            student_id=student1.id,
-            date=datetime.now(),
-            record_type="note",
-            description='Seasonal allergies',
-            doctor='Dr. Johnson'
-        )
-
-        med_record2 = MedicalRecord(
-            student_id=student1.id,
-            date=datetime.now(),
-            record_type="note",
-            description='Seasonal allergies',
-            doctor='Dr. Johnson'
-        )
-
-        med_record3 = MedicalRecord(
-            student_id=student2.id,
-            record_date=datetime.now(),
-            condition='None',
-            treatment='None',
-            notes='Annual checkup, all clear',
-            doctor_name='Dr. Brown'
-        )
-
-        # Add medical records to session
-        db.session.add_all([med_record1, med_record2, med_record3])
-        db.session.commit()
-
-        print("Database initialized with sample students and medical records.")
-    else:
-        print("Database already contains students.")
