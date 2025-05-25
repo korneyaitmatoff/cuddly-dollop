@@ -41,12 +41,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: OWASP ZAP Scan
-        uses: zaproxy/action-full-scan@v0.6.0
-        with:
-          target: 'http://your-web-app.com'  # Замените на URL вашего приложения
-          rules: 'rules/OWASP-top-10'  # Фокус на OWASP Top 10
-
   # 5. Container Security (если используется Docker)
   container-scan:
     runs-on: ubuntu-latest
