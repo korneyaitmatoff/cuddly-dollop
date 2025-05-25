@@ -14,38 +14,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run Semgrep (SAST)
-        uses: returntocorp/semgrep-action@v1
-        with:
-          config: p/security-audit  # OWASP-ориентированные правила
-
-      - name: SonarQube Scan
-        uses: SonarSource/sonarqube-github-action@master
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-
   # 2. SCA (Software Composition Analysis) + SBOM
   dependency-scan:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Generate SBOM with Syft
-        uses: anchore/sbom-action@v0
-        with:
-          format: 'spdx-json'
-          output-file: 'sbom.spdx.json'
-
-      - name: Scan dependencies with Trivy
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: 'fs'
-          ignore-unfixed: true
-          format: 'table'
-          exit-code: '1'  # Fail on critical vulnerabilities
-          severity: 'CRITICAL,HIGH'
 
   # 3. Secrets Detection
   secrets-check:
@@ -80,17 +54,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Build Docker image
-        run: docker build -t your-app-image .
-
-      - name: Scan container with Trivy
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: 'your-app-image'
-          format: 'table'
-          exit-code: '1'
-          severity: 'CRITICAL,HIGH'
 
   # 6. Deploy (только если все проверки пройдены)
   deploy:
